@@ -18,7 +18,7 @@ async function start() {
 }
 async function refresh() {
   const [{ data: events, error: eventsError }, { data: settings, error: settingsError }, { data: userData }] = await Promise.all([
-    supabaseClient.from('events').select('*').gte('date', today()).order('date'),
+    supabaseClient.from('events').select('*').order('date'),
     supabaseClient.from('plan_settings').select('*').eq('id', true).single(),
     supabaseClient.auth.getUser()
   ]);
@@ -41,20 +41,23 @@ function safe(value) { return String(value).replace(/[&<>"']/g, char => ({ '&':'
 function dateParts(date) { const d = new Date(`${date}T12:00:00`); return { day: d.getDate(), month: new Intl.DateTimeFormat('cs-CZ', { month: 'short' }).format(d).replace('.', ''), weekday: new Intl.DateTimeFormat('cs-CZ', { weekday: 'long' }).format(d) }; }
 function showError(message) { $('#events').innerHTML = `<p class="empty-state">${safe(message)}</p>`; }
 function toast(message) { const element = $('#toast'); element.textContent = message; element.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => element.classList.remove('show'), 2800); }
+function eventMarkup(event, played = false) {
+  const { day, month, weekday } = dateParts(event.date);
+  const assignment = editor ? `<button class="assignment ${event.player}" type="button" data-edit="${event.id}">${safe(playerLabel(event.player))}</button>` : `<span class="assignment ${event.player}">${safe(playerLabel(event.player))}</span>`;
+  return `<article class="event${played ? ' event-played' : ''}"><div class="date-block"><div class="date-day">${day}</div><div class="date-month">${month}</div><div class="date-weekday">${safe(weekday)}</div></div><div><h2>${safe(event.place)}</h2><p>${safe(event.title)}</p>${event.note ? `<p class="note">${safe(event.note)}</p>` : ''}</div>${assignment}</article>`;
+}
 
 function render() {
-  const counts = { all: state.events.length, mine: 0, friend: 0, open: 0 };
-  state.events.forEach(event => counts[event.player]++);
+  const upcoming = state.events.filter(event => event.date >= today());
+  const played = state.events.filter(event => event.date < today()).reverse();
+  const counts = { all: upcoming.length, mine: 0, friend: 0, open: 0 };
+  upcoming.forEach(event => counts[event.player]++);
   Object.entries(counts).forEach(([key, count]) => $(`#count-${key}`).textContent = count);
   $('#mine-label').textContent = state.names.mine; $('#friend-label').textContent = state.names.friend;
   $('#player-option-mine').textContent = state.names.mine; $('#player-option-friend').textContent = state.names.friend;
   document.querySelectorAll('.admin-only').forEach(element => element.hidden = !editor);
   $('#login-button').hidden = editor;
-  $('#events').innerHTML = state.events.map(event => {
-    const { day, month, weekday } = dateParts(event.date);
-    const assignment = editor ? `<button class="assignment ${event.player}" type="button" data-edit="${event.id}">${safe(playerLabel(event.player))}</button>` : `<span class="assignment ${event.player}">${safe(playerLabel(event.player))}</span>`;
-    return `<article class="event"><div class="date-block"><div class="date-day">${day}</div><div class="date-month">${month}</div><div class="date-weekday">${safe(weekday)}</div></div><div><h2>${safe(event.place)}</h2><p>${safe(event.title)}</p>${event.note ? `<p class="note">${safe(event.note)}</p>` : ''}</div>${assignment}</article>`;
-  }).join('');
+  $('#events').innerHTML = upcoming.map(event => eventMarkup(event)).join('') + (played.length ? `<div class="played-divider"><span>Odehráno</span></div>${played.map(event => eventMarkup(event, true)).join('')}` : '');
   $('#empty-state').hidden = state.events.length > 0;
 }
 function openEvent(event = null) {

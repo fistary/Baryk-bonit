@@ -38,7 +38,7 @@ function today() {
 }
 function playerLabel(player) { return player === 'mine' ? state.names.mine : player === 'friend' ? state.names.friend : 'K domluvě'; }
 function safe(value) { return String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' })[char]); }
-function dateParts(date) { const d = new Date(`${date}T12:00:00`); return { day: d.getDate(), month: new Intl.DateTimeFormat('cs-CZ', { month: 'short' }).format(d).replace('.', '') }; }
+function dateParts(date) { const d = new Date(`${date}T12:00:00`); return { day: d.getDate(), month: new Intl.DateTimeFormat('cs-CZ', { month: 'short' }).format(d).replace('.', ''), weekday: new Intl.DateTimeFormat('cs-CZ', { weekday: 'long' }).format(d) }; }
 function showError(message) { $('#events').innerHTML = `<p class="empty-state">${safe(message)}</p>`; }
 function toast(message) { const element = $('#toast'); element.textContent = message; element.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => element.classList.remove('show'), 2800); }
 
@@ -50,9 +50,9 @@ function render() {
   document.querySelectorAll('.admin-only').forEach(element => element.hidden = !editor);
   $('#login-button').hidden = editor;
   $('#events').innerHTML = state.events.map(event => {
-    const { day, month } = dateParts(event.date);
+    const { day, month, weekday } = dateParts(event.date);
     const assignment = editor ? `<button class="assignment ${event.player}" type="button" data-edit="${event.id}">${safe(playerLabel(event.player))}</button>` : `<span class="assignment ${event.player}">${safe(playerLabel(event.player))}</span>`;
-    return `<article class="event"><div class="date-block"><div class="date-day">${day}</div><div class="date-month">${month}</div></div><div><h2>${safe(event.place)}</h2><p>${safe(event.title)}</p>${event.note ? `<p class="note">${safe(event.note)}</p>` : ''}</div>${assignment}</article>`;
+    return `<article class="event"><div class="date-block"><div class="date-day">${day}</div><div class="date-month">${month}</div><div class="date-weekday">${safe(weekday)}</div></div><div><h2>${safe(event.place)}</h2><p>${safe(event.title)}</p>${event.note ? `<p class="note">${safe(event.note)}</p>` : ''}</div>${assignment}</article>`;
   }).join('');
   $('#empty-state').hidden = state.events.length > 0;
 }
@@ -76,14 +76,25 @@ $('#event-form').addEventListener('submit', async event => {
 $('#delete-event').addEventListener('click', async () => { if (!editor || !confirm('Opravdu tento termín smazat?')) return; const { error } = await supabaseClient.from('events').delete().eq('id', $('#event-id').value); if (error) return toast('Smazání se nepodařilo.'); $('#event-dialog').close(); await refresh(); });
 $('#settings-button').addEventListener('click', () => { $('#settings-mine').value = state.names.mine; $('#settings-friend').value = state.names.friend; $('#settings-dialog').showModal(); });
 $('#settings-form').addEventListener('submit', async event => { event.preventDefault(); const data = new FormData(event.currentTarget); const { error } = await supabaseClient.from('plan_settings').update({ mine_name: data.get('mine').trim(), friend_name: data.get('friend').trim() }).eq('id', true); if (error) return toast('Nastavení se nepodařilo uložit.'); $('#settings-dialog').close(); await refresh(); });
-$('#login-button').addEventListener('click', () => $('#login-dialog').showModal());
+function clearLoginForm() {
+  $('#login-form').reset();
+  $('#login-username').value = '';
+  $('#login-password').value = '';
+}
+$('#login-button').addEventListener('click', () => { clearLoginForm(); $('#login-dialog').showModal(); });
+$('#login-dialog').addEventListener('close', clearLoginForm);
 $('#login-form').addEventListener('submit', async event => {
   event.preventDefault();
+  const submitButton = event.currentTarget.querySelector('[type="submit"]');
+  submitButton.disabled = true;
   const username = $('#login-username').value.trim().toLowerCase();
-  if (username !== config.adminUsername?.toLowerCase() || !config.adminEmail) return toast('Nesprávné uživatelské jméno nebo heslo.');
+  if (username !== config.adminUsername?.toLowerCase() || !config.adminEmail) { submitButton.disabled = false; return toast('Nesprávné uživatelské jméno nebo heslo.'); }
   const { error } = await supabaseClient.auth.signInWithPassword({ email: config.adminEmail, password: $('#login-password').value });
+  submitButton.disabled = false;
   if (error) return toast('Nesprávné uživatelské jméno nebo heslo.');
-  event.currentTarget.reset(); $('#login-dialog').close(); await refresh(); toast('Přihlášení proběhlo úspěšně.');
+  clearLoginForm();
+  if ($('#login-dialog').open) $('#login-dialog').close();
+  toast('Přihlášení proběhlo úspěšně.');
 });
 $('#password-button').addEventListener('click', () => $('#password-dialog').showModal());
 $('#password-form').addEventListener('submit', async event => {

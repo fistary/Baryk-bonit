@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#183a5a" />
+    <meta name="description" content="Společný plán obsazení baryton saxofonu Big Bandu Bonit." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Baryton · Bonit</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">BIG BAND BONIT</p>
+          <h1>Baryton</h1>
+          <p class="subtitle">Kdo hraje který koncert?</p>
+        </div>
+        <button id="pdf-button" class="button button-light" type="button">Exportovat PDF</button>
+      </header>
+
+      <section class="summary" aria-label="Stav obsazení">
+        <button class="summary-item active" type="button" data-filter="all"><strong id="count-all">0</strong><span>vše</span></button>
+        <button class="summary-item" type="button" data-filter="mine"><strong id="count-mine">0</strong><span id="mine-label">já</span></button>
+        <button class="summary-item" type="button" data-filter="friend"><strong id="count-friend">0</strong><span id="friend-label">kolega</span></button>
+        <button class="summary-item warning" type="button" data-filter="open"><strong id="count-open">0</strong><span>k domluvě</span></button>
+      </section>
+
+      <section class="toolbar" aria-label="Nástroje">
+        <button id="add-event" class="button button-primary admin-only" type="button" hidden>+ Přidat termín</button>
+        <button id="settings-button" class="button button-plain admin-only" type="button" hidden>Nastavení</button>
+        <button id="login-button" class="button button-plain" type="button">Přihlásit se</button>
+        <button id="logout-button" class="button button-plain admin-only" type="button" hidden>Odhlásit</button>
+        <a class="source-link" href="https://bigbandbonit.cz/kalendar-akci/" target="_blank" rel="noreferrer">Kalendář Bonitu ↗</a>
+      </section>
+
+      <section id="events" class="events" aria-live="polite"></section>
+      <p id="empty-state" class="empty-state" hidden>Pro tento výběr nejsou žádné termíny.</p>
+      <section id="calendar" class="calendar" aria-live="polite">
+        <div class="calendar-header"><button id="previous-month" class="calendar-nav" type="button" aria-label="Předchozí měsíc">‹</button><h2 id="calendar-title"></h2><button id="next-month" class="calendar-nav" type="button" aria-label="Další měsíc">›</button></div>
+        <div class="weekdays" aria-hidden="true"><span>Po</span><span>Út</span><span>St</span><span>Čt</span><span>Pá</span><span>So</span><span>Ne</span></div>
+        <div id="calendar-days" class="calendar-days"></div>
+        <p class="calendar-hint">Klepnutím na obsazený den upravíš termín.</p>
+      </section>
+    </main>
+
+    <dialog id="event-dialog">
+      <form id="event-form" method="dialog">
+        <div class="dialog-heading"><h2 id="event-dialog-title">Přidat termín</h2><button class="icon-button" value="cancel" aria-label="Zavřít">×</button></div>
+        <label>Datum<input id="event-date" name="date" type="date" required /></label>
+        <label>Město / místo<input id="event-place" name="place" type="text" placeholder="Např. Děčín" required /></label>
+        <label>Akce<input id="event-title" name="title" type="text" placeholder="Např. městský ples" required /></label>
+        <label>Hraje<select id="event-player" name="player"><option value="open">K domluvě</option><option value="mine">Já</option><option value="friend">Kolega</option></select></label>
+        <label>Poznámka<textarea id="event-note" name="note" rows="3" placeholder="Čas, doprava, podmínka…"></textarea></label>
+        <input id="event-id" name="id" type="hidden" />
+        <div class="dialog-actions"><button id="delete-event" class="button button-danger" type="button" hidden>Smazat</button><span></span><button class="button button-plain" type="button" data-close="event-dialog">Zrušit</button><button id="save-event" class="button button-primary" value="default">Uložit</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="settings-dialog">
+      <form id="settings-form" method="dialog">
+        <div class="dialog-heading"><h2>Nastavení</h2><button class="icon-button" value="cancel" aria-label="Zavřít">×</button></div>
+        <p class="help">Jména se zobrazí v celém plánu i ve sdíleném odkazu. Plán se ukládá lokálně v prohlížeči tohoto zařízení.</p>
+        <label>Moje jméno<input id="settings-mine" name="mine" type="text" required maxlength="30" /></label>
+        <label>Jméno kolegy<input id="settings-friend" name="friend" type="text" required maxlength="30" /></label>
+        <div class="dialog-actions"><span></span><button class="button button-plain" type="button" data-close="settings-dialog">Zrušit</button><button class="button button-primary" value="default">Uložit</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="login-dialog">
+      <form id="login-form">
+        <div class="dialog-heading"><h2>Přihlášení správce</h2><button class="icon-button" type="button" data-close="login-dialog" aria-label="Zavřít">×</button></div>
+        <p class="help">Na e-mail pošleme bezpečný odkaz k přihlášení. Úpravy se zpřístupní pouze registrovanému správci.</p>
+        <label>E-mail<input id="login-email" type="email" required autocomplete="email" placeholder="ty@priklad.cz" /></label>
+        <div class="dialog-actions"><span></span><button class="button button-plain" type="button" data-close="login-dialog">Zrušit</button><button class="button button-primary" type="submit">Poslat odkaz</button></div>
+      </form>
+    </dialog>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

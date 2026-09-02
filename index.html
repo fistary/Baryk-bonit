@@ -47,7 +47,7 @@
         <label>Datum<input id="event-date" name="date" type="date" required /></label>
         <label>Město / místo<input id="event-place" name="place" type="text" placeholder="Např. Děčín" required /></label>
         <label>Akce<input id="event-title" name="title" type="text" placeholder="Např. městský ples" required /></label>
-        <label>Hraje<select id="event-player" name="player"><option value="open">K domluvě</option><option value="mine">Já</option><option value="friend">Kolega</option></select></label>
+        <label>Hraje<select id="event-player" name="player"><option value="open">K domluvě</option><option id="player-option-mine" value="mine">Já</option><option id="player-option-friend" value="friend">Kolega</option></select></label>
         <label>Poznámka<textarea id="event-note" name="note" rows="3" placeholder="Čas, doprava, podmínka…"></textarea></label>
         <input id="event-id" name="id" type="hidden" />
         <div class="dialog-actions"><button id="delete-event" class="button button-danger" type="button" hidden>Smazat</button><span></span><button class="button button-plain" type="button" data-close="event-dialog">Zrušit</button><button id="save-event" class="button button-primary" value="default">Uložit</button></div>

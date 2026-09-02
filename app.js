@@ -47,6 +47,7 @@ function render() {
   state.events.forEach(event => counts[event.player]++);
   Object.entries(counts).forEach(([key, count]) => $(`#count-${key}`).textContent = count);
   $('#mine-label').textContent = state.names.mine; $('#friend-label').textContent = state.names.friend;
+  $('#player-option-mine').textContent = state.names.mine; $('#player-option-friend').textContent = state.names.friend;
   document.querySelectorAll('.admin-only').forEach(element => element.hidden = !editor);
   $('#login-button').hidden = editor;
   $('#events').innerHTML = state.events.map(event => {

@@ -5,10 +5,10 @@ Mobilní přehled obsazení baryton saxofonu. Každý, kdo otevře odkaz aplikac
 ## Jednorázové zprovoznění
 
 1. Založ bezplatný projekt na [Supabase](https://supabase.com/). V **SQL Editor** spusť celý soubor [supabase.sql](supabase.sql).
-2. V **Authentication → URL Configuration** nastav adresu budoucí aplikace jako `Site URL` a stejnou adresu přidej mezi `Redirect URLs`. Zapni přihlašování přes e-mail (Magic Link).
-3. V **Connect → JavaScript** zkopíruj `Project URL` a **publishable key** do [config.js](config.js). Tento veřejný klíč je určený pro web; nikdy sem nevkládej `secret` nebo `service_role` klíč.
+2. V **Authentication → Sign In / Providers** ponech zapnuté přihlašování přes e-mail a heslo.
+3. V **Connect → JavaScript** zkopíruj `Project URL` a **publishable key** do [config.js](config.js). Doplň také svoje přihlašovací jméno a e-mail správce. Heslo do souboru nikdy neukládej. Veřejný klíč je určený pro web; nikdy sem nevkládej `secret` nebo `service_role` klíč.
 4. Aplikaci vystav přes **GitHub Pages**: vytvoř repozitář, nahraj všechny soubory této složky a v **Settings → Pages** vyber větev `main` a složku `/ (root)`. Výsledná adresa bude například `https://uzivatel.github.io/baryton-bonit/`.
-5. Otevři veřejnou adresu aplikace, klikni na **Přihlásit se** a otevři magic link, který přijde na tvůj e-mail. V Supabase pak v **Authentication → Users** zkopíruj svoje `User UID` a spusť v SQL Editoru:
+5. V Supabase vytvoř uživatele s e-mailem a heslem. V **Authentication → Users** zkopíruj jeho `User UID` a spusť v SQL Editoru:
 
    ```sql
    insert into public.editors (user_id) values ('SEM_VLOZ_SVE_USER_UID');

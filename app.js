@@ -77,7 +77,23 @@ $('#delete-event').addEventListener('click', async () => { if (!editor || !confi
 $('#settings-button').addEventListener('click', () => { $('#settings-mine').value = state.names.mine; $('#settings-friend').value = state.names.friend; $('#settings-dialog').showModal(); });
 $('#settings-form').addEventListener('submit', async event => { event.preventDefault(); const data = new FormData(event.currentTarget); const { error } = await supabaseClient.from('plan_settings').update({ mine_name: data.get('mine').trim(), friend_name: data.get('friend').trim() }).eq('id', true); if (error) return toast('Nastavení se nepodařilo uložit.'); $('#settings-dialog').close(); await refresh(); });
 $('#login-button').addEventListener('click', () => $('#login-dialog').showModal());
-$('#login-form').addEventListener('submit', async event => { event.preventDefault(); const { error } = await supabaseClient.auth.signInWithOtp({ email: $('#login-email').value, options: { emailRedirectTo: location.href } }); if (error) return toast(`E-mail se nepodařilo odeslat: ${error.message}`); $('#login-dialog').close(); toast('Odkaz k přihlášení byl odeslán e-mailem.'); });
+$('#login-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const username = $('#login-username').value.trim().toLowerCase();
+  if (username !== config.adminUsername?.toLowerCase() || !config.adminEmail) return toast('Nesprávné uživatelské jméno nebo heslo.');
+  const { error } = await supabaseClient.auth.signInWithPassword({ email: config.adminEmail, password: $('#login-password').value });
+  if (error) return toast('Nesprávné uživatelské jméno nebo heslo.');
+  event.currentTarget.reset(); $('#login-dialog').close(); await refresh(); toast('Přihlášení proběhlo úspěšně.');
+});
+$('#password-button').addEventListener('click', () => $('#password-dialog').showModal());
+$('#password-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const password = $('#new-password').value;
+  if (password !== $('#new-password-confirm').value) return toast('Zadaná hesla se neshodují.');
+  const { error } = await supabaseClient.auth.updateUser({ password });
+  if (error) return toast(`Heslo se nepodařilo uložit: ${error.message}`);
+  event.currentTarget.reset(); $('#password-dialog').close(); toast('Nové heslo bylo uloženo.');
+});
 $('#logout-button').addEventListener('click', () => supabaseClient.auth.signOut());
 $('#pdf-button').addEventListener('click', () => window.print());
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');

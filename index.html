@@ -16,7 +16,6 @@
         <div>
           <p class="eyebrow">BIG BAND BONIT</p>
           <h1>Baryton</h1>
-          <p class="subtitle">Kdo hraje který koncert?</p>
         </div>
         <button id="pdf-button" class="button button-light" type="button">Exportovat PDF</button>
       </header>
@@ -31,6 +30,7 @@
       <section class="toolbar" aria-label="Nástroje">
         <button id="add-event" class="button button-primary admin-only" type="button" hidden>+ Přidat termín</button>
         <button id="settings-button" class="button button-plain admin-only" type="button" hidden>Nastavení</button>
+        <button id="password-button" class="button button-plain admin-only" type="button" hidden>Změnit heslo</button>
         <button id="login-button" class="button button-plain" type="button">Přihlásit se</button>
         <button id="logout-button" class="button button-plain admin-only" type="button" hidden>Odhlásit</button>
       </section>
@@ -65,9 +65,19 @@
     <dialog id="login-dialog">
       <form id="login-form">
         <div class="dialog-heading"><h2>Přihlášení správce</h2><button class="icon-button" type="button" data-close="login-dialog" aria-label="Zavřít">×</button></div>
-        <p class="help">Na e-mail pošleme bezpečný odkaz k přihlášení. Úpravy se zpřístupní pouze registrovanému správci.</p>
-        <label>E-mail<input id="login-email" type="email" required autocomplete="email" placeholder="ty@priklad.cz" /></label>
-        <div class="dialog-actions"><span></span><button class="button button-plain" type="button" data-close="login-dialog">Zrušit</button><button class="button button-primary" type="submit">Poslat odkaz</button></div>
+        <p class="help">Úpravy se zpřístupní pouze správci.</p>
+        <label>Uživatelské jméno<input id="login-username" type="text" required autocomplete="username" autocapitalize="none" spellcheck="false" /></label>
+        <label>Heslo<input id="login-password" type="password" required autocomplete="current-password" /></label>
+        <div class="dialog-actions"><span></span><button class="button button-plain" type="button" data-close="login-dialog">Zrušit</button><button class="button button-primary" type="submit">Přihlásit se</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="password-dialog">
+      <form id="password-form">
+        <div class="dialog-heading"><h2>Nastavit heslo</h2><button class="icon-button" type="button" data-close="password-dialog" aria-label="Zavřít">×</button></div>
+        <label>Nové heslo<input id="new-password" type="password" required minlength="8" autocomplete="new-password" /></label>
+        <label>Heslo znovu<input id="new-password-confirm" type="password" required minlength="8" autocomplete="new-password" /></label>
+        <div class="dialog-actions"><span></span><button class="button button-plain" type="button" data-close="password-dialog">Zrušit</button><button class="button button-primary" type="submit">Uložit heslo</button></div>
       </form>
     </dialog>
 

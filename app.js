@@ -97,7 +97,7 @@ $('#delete-event').addEventListener('click', async () => { if (!editor || !confi
 $('#settings-button').addEventListener('click', () => { $('#settings-mine').value = state.names.mine; $('#settings-friend').value = state.names.friend; $('#settings-dialog').showModal(); });
 $('#settings-form').addEventListener('submit', async event => { event.preventDefault(); const data = new FormData(event.currentTarget); const { error } = await supabaseClient.from('plan_settings').update({ mine_name: data.get('mine').trim(), friend_name: data.get('friend').trim() }).eq('id', true); if (error) return toast('Nastavení se nepodařilo uložit.'); $('#settings-dialog').close(); await refresh(); });
 $('#login-button').addEventListener('click', () => $('#login-dialog').showModal());
-$('#login-form').addEventListener('submit', async event => { event.preventDefault(); const { error } = await supabaseClient.auth.signInWithOtp({ email: $('#login-email').value, options: { emailRedirectTo: location.href } }); if (error) return toast('E-mail se nepodařilo odeslat.'); $('#login-dialog').close(); toast('Odkaz k přihlášení byl odeslán e-mailem.'); });
+$('#login-form').addEventListener('submit', async event => { event.preventDefault(); const { error } = await supabaseClient.auth.signInWithOtp({ email: $('#login-email').value, options: { emailRedirectTo: location.href } }); if (error) return toast(`E-mail se nepodařilo odeslat: ${error.message}`); $('#login-dialog').close(); toast('Odkaz k přihlášení byl odeslán e-mailem.'); });
 $('#logout-button').addEventListener('click', () => supabaseClient.auth.signOut());
 $('#pdf-button').addEventListener('click', () => window.print());
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');

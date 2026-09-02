@@ -1,13 +1,13 @@
 const $ = selector => document.querySelector(selector);
 const config = window.BARYTON_CONFIG || {};
 const configured = config.supabaseUrl?.startsWith('https://') && !config.supabasePublishableKey?.startsWith('DOPLN_');
-let supabase = null;
+let supabaseClient = null;
 let state = { names: { mine: 'Já', friend: 'Kolega' }, events: [] };
 let editor = false;
 let calendarMonth = '';
 
 if (configured) {
-  supabase = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
+  supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
   start();
 } else {
   $('#events').innerHTML = '<p class="empty-state">Aplikace ještě není připojená k databázi. Dokonči nastavení podle README.</p>';
@@ -16,20 +16,20 @@ if (configured) {
 
 async function start() {
   await refresh();
-  supabase.auth.onAuthStateChange(() => refresh());
+  supabaseClient.auth.onAuthStateChange(() => refresh());
 }
 async function refresh() {
   const [{ data: events, error: eventsError }, { data: settings, error: settingsError }, { data: userData }] = await Promise.all([
-    supabase.from('events').select('*').gte('date', today()).order('date'),
-    supabase.from('plan_settings').select('*').eq('id', true).single(),
-    supabase.auth.getUser()
+    supabaseClient.from('events').select('*').gte('date', today()).order('date'),
+    supabaseClient.from('plan_settings').select('*').eq('id', true).single(),
+    supabaseClient.auth.getUser()
   ]);
   if (eventsError || settingsError) return showError('Nepodařilo se načíst plán. Zkontroluj připojení k databázi.');
   state.events = events;
   state.names = { mine: settings.mine_name, friend: settings.friend_name };
   editor = false;
   if (userData.user) {
-    const { data } = await supabase.rpc('is_editor');
+    const { data } = await supabaseClient.rpc('is_editor');
     editor = data === true;
   }
   calendarMonth = calendarMonth || earliestEventMonth();
@@ -90,14 +90,14 @@ document.querySelectorAll('[data-close]').forEach(button => button.addEventListe
 $('#event-form').addEventListener('submit', async event => {
   event.preventDefault(); if (!editor) return;
   const data = new FormData(event.currentTarget); const record = { date: data.get('date'), place: data.get('place').trim(), title: data.get('title').trim(), player: data.get('player'), note: data.get('note').trim() };
-  const id = data.get('id'); const query = id ? supabase.from('events').update(record).eq('id', id) : supabase.from('events').insert(record); const { error } = await query;
+  const id = data.get('id'); const query = id ? supabaseClient.from('events').update(record).eq('id', id) : supabaseClient.from('events').insert(record); const { error } = await query;
   if (error) return toast('Uložení se nepodařilo.'); $('#event-dialog').close(); await refresh(); toast('Termín uložen.');
 });
-$('#delete-event').addEventListener('click', async () => { if (!editor || !confirm('Opravdu tento termín smazat?')) return; const { error } = await supabase.from('events').delete().eq('id', $('#event-id').value); if (error) return toast('Smazání se nepodařilo.'); $('#event-dialog').close(); await refresh(); });
+$('#delete-event').addEventListener('click', async () => { if (!editor || !confirm('Opravdu tento termín smazat?')) return; const { error } = await supabaseClient.from('events').delete().eq('id', $('#event-id').value); if (error) return toast('Smazání se nepodařilo.'); $('#event-dialog').close(); await refresh(); });
 $('#settings-button').addEventListener('click', () => { $('#settings-mine').value = state.names.mine; $('#settings-friend').value = state.names.friend; $('#settings-dialog').showModal(); });
-$('#settings-form').addEventListener('submit', async event => { event.preventDefault(); const data = new FormData(event.currentTarget); const { error } = await supabase.from('plan_settings').update({ mine_name: data.get('mine').trim(), friend_name: data.get('friend').trim() }).eq('id', true); if (error) return toast('Nastavení se nepodařilo uložit.'); $('#settings-dialog').close(); await refresh(); });
+$('#settings-form').addEventListener('submit', async event => { event.preventDefault(); const data = new FormData(event.currentTarget); const { error } = await supabaseClient.from('plan_settings').update({ mine_name: data.get('mine').trim(), friend_name: data.get('friend').trim() }).eq('id', true); if (error) return toast('Nastavení se nepodařilo uložit.'); $('#settings-dialog').close(); await refresh(); });
 $('#login-button').addEventListener('click', () => $('#login-dialog').showModal());
-$('#login-form').addEventListener('submit', async event => { event.preventDefault(); const { error } = await supabase.auth.signInWithOtp({ email: $('#login-email').value, options: { emailRedirectTo: location.href } }); if (error) return toast('E-mail se nepodařilo odeslat.'); $('#login-dialog').close(); toast('Odkaz k přihlášení byl odeslán e-mailem.'); });
-$('#logout-button').addEventListener('click', () => supabase.auth.signOut());
+$('#login-form').addEventListener('submit', async event => { event.preventDefault(); const { error } = await supabaseClient.auth.signInWithOtp({ email: $('#login-email').value, options: { emailRedirectTo: location.href } }); if (error) return toast('E-mail se nepodařilo odeslat.'); $('#login-dialog').close(); toast('Odkaz k přihlášení byl odeslán e-mailem.'); });
+$('#logout-button').addEventListener('click', () => supabaseClient.auth.signOut());
 $('#pdf-button').addEventListener('click', () => window.print());
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');

@@ -4,14 +4,12 @@ const configured = config.supabaseUrl?.startsWith('https://') && !config.supabas
 let supabaseClient = null;
 let state = { names: { mine: 'Já', friend: 'Kolega' }, events: [] };
 let editor = false;
-let calendarMonth = '';
 
 if (configured) {
   supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
   start();
 } else {
   $('#events').innerHTML = '<p class="empty-state">Aplikace ještě není připojená k databázi. Dokonči nastavení podle README.</p>';
-  $('#calendar').hidden = true;
 }
 
 async function start() {
@@ -32,18 +30,16 @@ async function refresh() {
     const { data } = await supabaseClient.rpc('is_editor');
     editor = data === true;
   }
-  calendarMonth = calendarMonth || earliestEventMonth();
   render();
 }
 function today() {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
-function earliestEventMonth() { return (state.events[0]?.date || today()).slice(0, 7); }
 function playerLabel(player) { return player === 'mine' ? state.names.mine : player === 'friend' ? state.names.friend : 'K domluvě'; }
 function safe(value) { return String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' })[char]); }
 function dateParts(date) { const d = new Date(`${date}T12:00:00`); return { day: d.getDate(), month: new Intl.DateTimeFormat('cs-CZ', { month: 'short' }).format(d).replace('.', '') }; }
-function showError(message) { $('#events').innerHTML = `<p class="empty-state">${safe(message)}</p>`; $('#calendar').hidden = true; }
+function showError(message) { $('#events').innerHTML = `<p class="empty-state">${safe(message)}</p>`; }
 function toast(message) { const element = $('#toast'); element.textContent = message; element.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => element.classList.remove('show'), 2800); }
 
 function render() {
@@ -59,20 +55,6 @@ function render() {
     return `<article class="event"><div class="date-block"><div class="date-day">${day}</div><div class="date-month">${month}</div></div><div><h2>${safe(event.place)}</h2><p>${safe(event.title)}</p>${event.note ? `<p class="note">${safe(event.note)}</p>` : ''}</div>${assignment}</article>`;
   }).join('');
   $('#empty-state').hidden = state.events.length > 0;
-  renderCalendar();
-}
-function renderCalendar() {
-  const [year, month] = calendarMonth.split('-').map(Number);
-  const first = new Date(year, month - 1, 1); const daysInMonth = new Date(year, month, 0).getDate(); const offset = (first.getDay() + 6) % 7;
-  $('#calendar-title').textContent = new Intl.DateTimeFormat('cs-CZ', { month: 'long', year: 'numeric' }).format(first);
-  const slots = Array(offset).fill(null).concat(Array.from({ length: daysInMonth }, (_, index) => index + 1));
-  $('#calendar-days').innerHTML = slots.map(day => {
-    if (!day) return '<span class="calendar-day blank"></span>';
-    const date = `${calendarMonth}-${String(day).padStart(2, '0')}`; const event = state.events.find(item => item.date === date);
-    if (!event) return `<span class="calendar-day"><span>${day}</span></span>`;
-    const content = `<span>${day}</span><span class="calendar-player">${safe(playerLabel(event.player))}</span>`;
-    return editor ? `<button type="button" class="calendar-day has-event ${event.player}" data-edit="${event.id}">${content}</button>` : `<span class="calendar-day has-event ${event.player}">${content}</span>`;
-  }).join('');
 }
 function openEvent(event = null) {
   if (!editor) return;
@@ -83,9 +65,7 @@ function openEvent(event = null) {
 function eventFromClick(event) { const button = event.target.closest('[data-edit]'); if (button) openEvent(state.events.find(item => item.id === button.dataset.edit)); }
 
 $('#add-event').addEventListener('click', () => openEvent());
-$('#events').addEventListener('click', eventFromClick); $('#calendar-days').addEventListener('click', eventFromClick);
-$('#previous-month').addEventListener('click', () => { const [year, month] = calendarMonth.split('-').map(Number); calendarMonth = `${month === 1 ? year - 1 : year}-${String(month === 1 ? 12 : month - 1).padStart(2, '0')}`; renderCalendar(); });
-$('#next-month').addEventListener('click', () => { const [year, month] = calendarMonth.split('-').map(Number); calendarMonth = `${month === 12 ? year + 1 : year}-${String(month === 12 ? 1 : month + 1).padStart(2, '0')}`; renderCalendar(); });
+$('#events').addEventListener('click', eventFromClick);
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
 $('#event-form').addEventListener('submit', async event => {
   event.preventDefault(); if (!editor) return;

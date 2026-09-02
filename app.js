@@ -50,8 +50,8 @@ function eventMarkup(event, played = false) {
 function render() {
   const upcoming = state.events.filter(event => event.date >= today());
   const played = state.events.filter(event => event.date < today()).reverse();
-  const counts = { all: upcoming.length, mine: 0, friend: 0, open: 0 };
-  upcoming.forEach(event => counts[event.player]++);
+  const counts = { all: state.events.length, mine: 0, friend: 0, open: 0 };
+  state.events.forEach(event => counts[event.player]++);
   Object.entries(counts).forEach(([key, count]) => $(`#count-${key}`).textContent = count);
   $('#mine-label').textContent = state.names.mine; $('#friend-label').textContent = state.names.friend;
   $('#player-option-mine').textContent = state.names.mine; $('#player-option-friend').textContent = state.names.friend;

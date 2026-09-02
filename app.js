@@ -35,7 +35,10 @@ async function refresh() {
   calendarMonth = calendarMonth || earliestEventMonth();
   render();
 }
-function today() { return new Date().toLocaleDateString('en-CA'); }
+function today() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 function earliestEventMonth() { return (state.events[0]?.date || today()).slice(0, 7); }
 function playerLabel(player) { return player === 'mine' ? state.names.mine : player === 'friend' ? state.names.friend : 'K domluvě'; }
 function safe(value) { return String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' })[char]); }

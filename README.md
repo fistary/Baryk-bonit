@@ -1,24 +1,31 @@
-# Baryton · Bonit
+# Baryton - Bonit
 
-Mobilní přehled obsazení baryton saxofonu. Každý, kdo otevře odkaz aplikace, může plán pouze číst. Upravovat jej může pouze účet uvedený v tabulce `editors` v Supabase.
+Jednoduchá webová aplikace pro plánování obsazení baryton saxofonu v Big Bandu Bonit.
 
-## Jednorázové zprovoznění
+Aplikace zobrazuje přehled koncertů, jejich datum, den v týdnu, místo, název akce a informaci o tom, kdo daný koncert hraje. Proběhlé koncerty se automaticky přesunou do samostatné sekce **Odehráno**.
 
-1. Založ bezplatný projekt na [Supabase](https://supabase.com/). V **SQL Editor** spusť celý soubor [supabase.sql](supabase.sql).
-2. V **Authentication → Sign In / Providers** ponech zapnuté přihlašování přes e-mail a heslo.
-3. V **Connect → JavaScript** zkopíruj `Project URL` a **publishable key** do [config.js](config.js). Doplň také svoje přihlašovací jméno a e-mail správce. Heslo do souboru nikdy neukládej. Veřejný klíč je určený pro web; nikdy sem nevkládej `secret` nebo `service_role` klíč.
-4. Aplikaci vystav přes **GitHub Pages**: vytvoř repozitář, nahraj všechny soubory této složky a v **Settings → Pages** vyber větev `main` a složku `/ (root)`. Výsledná adresa bude například `https://uzivatel.github.io/baryton-bonit/`.
-5. V Supabase vytvoř uživatele s e-mailem a heslem. V **Authentication → Users** zkopíruj jeho `User UID` a spusť v SQL Editoru:
+## Funkce
 
-   ```sql
-   insert into public.editors (user_id) values ('SEM_VLOZ_SVE_USER_UID');
-   ```
+- přehled budoucích i odehraných koncertů,
+- rozdělení koncertů podle hráče,
+- počítadla jednotlivých kategorií,
+- vlastní jména hráčů,
+- poznámky k jednotlivým akcím,
+- export přehledu do PDF,
+- responzivní zobrazení pro mobilní telefon i počítač,
+- možnost přidání aplikace na plochu telefonu,
+- bezpečné přihlášení správce pomocí uživatelského jména a hesla.
 
-   Po obnovení stránky uvidíš ovládání pro úpravy.
+## Přístup a zabezpečení
 
-## Používání
+Veřejní návštěvníci mohou celý plán pouze prohlížet. Přidávat, upravovat a mazat koncerty může jen přihlášený správce.
 
-- Data jsou uložena v Supabase, nikoliv v prohlížeči. Jsou tedy shodná na telefonu i počítači.
-- Bez přihlášení je aplikace automaticky jen pro čtení. I kdyby někdo obešel skryté prvky rozhraní, databáze jeho změnu odmítne pravidly RLS.
-- **Exportovat PDF** otevře systémový tiskový dialog; na telefonu či počítači v něm zvol „Uložit jako PDF“ / „Sdílet jako PDF“.
-- Na telefonu otevři veřejný odkaz a přidej jej na plochu. Aplikace se pak chová jako samostatná aplikace.
+Data jsou uložena v databázi Supabase a oprávnění k jejich změně chrání pravidla Row Level Security. Samotné skrytí ovládacích prvků proto není jedinou ochranou — databáze odmítne změny od neoprávněných uživatelů.
+
+## Použité technologie
+
+- HTML
+- CSS
+- JavaScript
+- Supabase
+- GitHub Pages
